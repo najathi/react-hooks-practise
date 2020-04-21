@@ -1,7 +1,8 @@
 import React, {
   useState,
   useEffect,
-  useCallback
+  useCallback,
+  useReducer
 } from 'react';
 
 import IngredientForm from './IngredientForm';
@@ -9,13 +10,35 @@ import Search from './Search';
 import IngredientList from './IngredientList';
 import ErrorModal from '../UI/ErrorModal';
 
+// useReducer - alternative to useState
+const ingredientReducer = (currentIngredients, action) => {
+  // ingredient currently store by react
+  // action will be coming important for update state. (action is a updating things)
 
+  switch (action.type) {
+    case 'SET':
+      return action.ingredients;
+    case 'ADD':
+      return [...currentIngredients, action.ingredient];
+    case 'DELETE':
+      return currentIngredients.filter(ing => ing.id !== action.id);
+    default:
+      throw new Error('Should not get there!');
+  }
+
+}
 
 const Ingredients = props => {
 
+  /* In Redux section we have already discuss about that reducer that function that take some inputs and turns some output in the end. Whilst the concept of reducer function is similar, useReducer() has absolutely Bo Connection to the Redux library. */
 
+  // When working with useReducer(), React will re-render the component whenever your reducer the new state.
 
-  const [userIngredients, setUserIngredients] = useState([]);
+  // utilize the useReducer
+  const [userIngredients, dispatch] = useReducer(ingredientReducer, []);
+
+  //  using useState
+  //const [userIngredients, setUserIngredients] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState();
 
@@ -51,6 +74,12 @@ const Ingredients = props => {
     console.log('RENDERING INGREDIENTS', userIngredients);
   }, [userIngredients]);
 
+  const filteredIngredientsHandler = useCallback(filteredIngredients => {
+    // setUserIngredients(filteredIngredients);
+    dispatch({ type: 'SET', ingredients: filteredIngredients })
+    // }, [setUserIngredients]);
+  }, []);
+
   const addIngredientHandler = ingredient => {
     setIsLoading(true);
     fetch('https://react-hooks-794aa.firebaseio.com/ingredients.json', {
@@ -64,10 +93,12 @@ const Ingredients = props => {
           return response.json();
         })
       .then(responseData => {
-        setUserIngredients(prevIngredients => [
-          ...prevIngredients,
-          { id: responseData.name, ...ingredient }
-        ]);
+        // setUserIngredients(prevIngredients => [
+        //   ...prevIngredients,
+        //   { id: responseData.name, ...ingredient }
+        // ]);
+        // console.log('responseData.name', responseData.name);
+        dispatch({ type: 'ADD', ingredient: { id: responseData.name, ...ingredient } });
       })
       .catch(error => {
         setIsLoading(false);
@@ -76,10 +107,6 @@ const Ingredients = props => {
       });
   }
 
-  const filteredIngredientsHandler = useCallback(filteredIngredients => {
-    setUserIngredients(filteredIngredients);
-  }, [setUserIngredients]);
-
   const removeIngredientHandler = ingredientId => {
     setIsLoading(true);
     fetch(`https://react-hooks-794aa.firebaseio.com/ingredients/${ingredientId}.json`, {
@@ -87,7 +114,8 @@ const Ingredients = props => {
     })
       .then(response => {
         setIsLoading(false);
-        setUserIngredients(prevIngredients => prevIngredients.filter(ingredient => ingredient.id !== ingredientId));
+        // setUserIngredients(prevIngredients => prevIngredients.filter(ingredient => ingredient.id !== ingredientId));
+        dispatch({ type: 'DELETE', id: ingredientId })
       })
       .catch(error => {
         setIsLoading(false);
