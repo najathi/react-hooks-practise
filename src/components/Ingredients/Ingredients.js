@@ -2,8 +2,13 @@ import React, {
   // useState,
   useEffect,
   useCallback,
-  useReducer
+  useReducer,
+  useMemo
 } from 'react';
+
+// useCallBack was a hook to save a functions doesn't changed, So new function is generated.
+
+// useMemo was a hook, you can save the value, so value will be created.
 
 import IngredientForm from './IngredientForm';
 import Search from './Search';
@@ -94,11 +99,11 @@ const Ingredients = props => {
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
     // setUserIngredients(filteredIngredients);
-    dispatch({ type: 'SET', ingredients: filteredIngredients })
+    dispatch({ type: 'SET', ingredients: filteredIngredients });
     // }, [setUserIngredients]);
   }, []);
 
-  const addIngredientHandler = ingredient => {
+  const addIngredientHandler = useCallback(ingredient => {
     // setIsLoading(true);
     dispatchHttp({ type: 'SEND' });
     fetch('https://react-hooks-794aa.firebaseio.com/ingredients.json', {
@@ -126,9 +131,9 @@ const Ingredients = props => {
         // setError(error.message);
         dispatchHttp({ type: 'ERROR', errorMessage: error.message });
       });
-  }
+  }, []);
 
-  const removeIngredientHandler = ingredientId => {
+  const removeIngredientHandler = useCallback(ingredientId => {
     // setIsLoading(true);
     dispatchHttp({ type: 'SEND' });
     fetch(`https://react-hooks-794aa.firebaseio.com/ingredients/${ingredientId}.json`, {
@@ -146,22 +151,29 @@ const Ingredients = props => {
         // setError(error.message);
         dispatchHttp({ type: 'ERROR', errorDate: error.message });
       });
-  }
+  }, []);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     // setError(null);
     // setIsLoading(false);
     dispatchHttp({ type: 'CLEAR' });
-  }
+  }, []);
+
+  const ingredientList = useMemo(() => {
+    return (
+      <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />
+    );
+  }, [userIngredients, removeIngredientHandler]);
 
   return (
     <div className="App">
       {httpState.error && <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>}
+
       <IngredientForm onAddIngredient={addIngredientHandler} loading={httpState.loading} />
 
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler} />
-        <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />
+        {ingredientList}
       </section>
     </div>
   );
