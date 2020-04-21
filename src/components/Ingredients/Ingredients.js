@@ -1,5 +1,5 @@
 import React, {
-  useState,
+  // useState,
   useEffect,
   useCallback,
   useReducer
@@ -28,6 +28,21 @@ const ingredientReducer = (currentIngredients, action) => {
 
 }
 
+const httpReducer = (curHttpState, action) => {
+  switch (action.type) {
+    case 'SEND':
+      return { loading: true, error: null };
+    case 'RESPONSE':
+      return { ...curHttpState, loading: false };
+    case 'ERROR':
+      return { loading: false, error: action.errorMessage };
+    case 'CLEAR':
+      return { ...curHttpState, error: null, loading: false };
+    default:
+      throw new Error('should not be reached!')
+  }
+}
+
 const Ingredients = props => {
 
   /* In Redux section we have already discuss about that reducer that function that take some inputs and turns some output in the end. Whilst the concept of reducer function is similar, useReducer() has absolutely Bo Connection to the Redux library. */
@@ -36,11 +51,14 @@ const Ingredients = props => {
 
   // utilize the useReducer
   const [userIngredients, dispatch] = useReducer(ingredientReducer, []);
+  const [httpState, dispatchHttp] = useReducer(httpReducer, { loading: false, error: null });
+
+  console.log('httpState: ', httpState);
 
   //  using useState
   //const [userIngredients, setUserIngredients] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState();
+  // const [isLoading, setIsLoading] = useState(false);
+  // const [error, setError] = useState();
 
   /* useEffect(() => {
     fetch('https://react-hooks-794aa.firebaseio.com/ingredients.json')
@@ -81,7 +99,8 @@ const Ingredients = props => {
   }, []);
 
   const addIngredientHandler = ingredient => {
-    setIsLoading(true);
+    // setIsLoading(true);
+    dispatchHttp({ type: 'SEND' });
     fetch('https://react-hooks-794aa.firebaseio.com/ingredients.json', {
       method: 'POST',
       body: JSON.stringify(ingredient),
@@ -89,7 +108,8 @@ const Ingredients = props => {
     })
       .then(
         response => {
-          setIsLoading(false);
+          // setIsLoading(false);
+          dispatchHttp({ type: 'RESPONSE' });
           return response.json();
         })
       .then(responseData => {
@@ -101,38 +121,43 @@ const Ingredients = props => {
         dispatch({ type: 'ADD', ingredient: { id: responseData.name, ...ingredient } });
       })
       .catch(error => {
-        setIsLoading(false);
-        console.log(error);
-        setError(error.message);
+        // setIsLoading(false);
+        // console.log(error);
+        // setError(error.message);
+        dispatchHttp({ type: 'ERROR', errorMessage: error.message });
       });
   }
 
   const removeIngredientHandler = ingredientId => {
-    setIsLoading(true);
+    // setIsLoading(true);
+    dispatchHttp({ type: 'SEND' });
     fetch(`https://react-hooks-794aa.firebaseio.com/ingredients/${ingredientId}.json`, {
       method: 'DELETE'
     })
       .then(response => {
-        setIsLoading(false);
+        // setIsLoading(false);
+        dispatchHttp({ type: 'RESPONSE' });
         // setUserIngredients(prevIngredients => prevIngredients.filter(ingredient => ingredient.id !== ingredientId));
         dispatch({ type: 'DELETE', id: ingredientId })
       })
       .catch(error => {
-        setIsLoading(false);
-        console.log(error);
-        setError(error.message);
+        // setIsLoading(false);
+        // console.log(error);
+        // setError(error.message);
+        dispatchHttp({ type: 'ERROR', errorDate: error.message });
       });
   }
 
   const clearError = () => {
-    setError(null);
-    setIsLoading(false);
+    // setError(null);
+    // setIsLoading(false);
+    dispatchHttp({ type: 'CLEAR' });
   }
 
   return (
     <div className="App">
-      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
-      <IngredientForm onAddIngredient={addIngredientHandler} loading={isLoading} />
+      {httpState.error && <ErrorModal onClose={clearError}>{httpState.error}</ErrorModal>}
+      <IngredientForm onAddIngredient={addIngredientHandler} loading={httpState.loading} />
 
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler} />
