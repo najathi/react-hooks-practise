@@ -53,7 +53,7 @@ const Ingredients = props => {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, []);
   const [httpState, dispatchHttp] = useReducer(httpReducer, { loading: false, error: null });
 
-  console.log('httpState: ', httpState);
+  // console.log('httpState: ', httpState);
 
   //  using useState
   //const [userIngredients, setUserIngredients] = useState([]);
