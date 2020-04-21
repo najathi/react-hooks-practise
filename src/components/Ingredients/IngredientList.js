@@ -5,7 +5,7 @@ import './IngredientList.css';
 const IngredientList = props => {
   return (
     <section className="ingredient-list">
-      <h2>Loaded Ingredients...</h2>
+      <h2>Loaded Ingredients</h2>
       <ul>
         {props.ingredients.map(ig => (
           <li key={ig.id}

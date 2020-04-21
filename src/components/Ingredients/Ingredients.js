@@ -1,12 +1,23 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback
+} from 'react';
 
 import IngredientForm from './IngredientForm';
 import Search from './Search';
 import IngredientList from './IngredientList';
+import ErrorModal from '../UI/ErrorModal';
+
+
 
 const Ingredients = props => {
 
+
+
   const [userIngredients, setUserIngredients] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState();
 
   /* useEffect(() => {
     fetch('https://react-hooks-794aa.firebaseio.com/ingredients.json')
@@ -26,7 +37,7 @@ const Ingredients = props => {
         }
         setUserIngredients(loadedIngredients);
       })
-      .catch(function (error) {
+      .catch(error=>{
         console.log(error);
       });
   }, []); */
@@ -41,6 +52,7 @@ const Ingredients = props => {
   }, [userIngredients]);
 
   const addIngredientHandler = ingredient => {
+    setIsLoading(true);
     fetch('https://react-hooks-794aa.firebaseio.com/ingredients.json', {
       method: 'POST',
       body: JSON.stringify(ingredient),
@@ -48,6 +60,7 @@ const Ingredients = props => {
     })
       .then(
         response => {
+          setIsLoading(false);
           return response.json();
         })
       .then(responseData => {
@@ -56,8 +69,10 @@ const Ingredients = props => {
           { id: responseData.name, ...ingredient }
         ]);
       })
-      .catch(function (error) {
+      .catch(error => {
+        setIsLoading(false);
         console.log(error);
+        setError(error.message);
       });
   }
 
@@ -65,18 +80,35 @@ const Ingredients = props => {
     setUserIngredients(filteredIngredients);
   }, [setUserIngredients]);
 
-  const removeIngredientHandler = id => {
-    const filterArray = userIngredients.filter(ingredient => ingredient.id !== id);
-    setUserIngredients(filterArray);
+  const removeIngredientHandler = ingredientId => {
+    setIsLoading(true);
+    fetch(`https://react-hooks-794aa.firebaseio.com/ingredients/${ingredientId}.json`, {
+      method: 'DELETE'
+    })
+      .then(response => {
+        setIsLoading(false);
+        setUserIngredients(prevIngredients => prevIngredients.filter(ingredient => ingredient.id !== ingredientId));
+      })
+      .catch(error => {
+        setIsLoading(false);
+        console.log(error);
+        setError(error.message);
+      });
+  }
+
+  const clearError = () => {
+    setError(null);
+    setIsLoading(false);
   }
 
   return (
     <div className="App">
-      <IngredientForm onAddIngredient={addIngredientHandler} />
+      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
+      <IngredientForm onAddIngredient={addIngredientHandler} loading={isLoading} />
 
       <section>
         <Search onLoadIngredients={filteredIngredientsHandler} />
-        <IngredientList ingredients={userIngredients} onRemoveItem={() => { }} />
+        <IngredientList ingredients={userIngredients} onRemoveItem={removeIngredientHandler} />
       </section>
     </div>
   );
