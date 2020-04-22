@@ -63,7 +63,7 @@ const Ingredients = props => {
 
 
   // using custom hooks
-  const { isLoading, error, data, sendRequest, reqExtra, reqIdentifier } = useHttp();
+  const { isLoading, error, data, sendRequest, reqExtra, reqIdentifier, clear } = useHttp();
 
   //  using useState
   //const [userIngredients, setUserIngredients] = useState([]);
@@ -184,7 +184,7 @@ const Ingredients = props => {
 
     // using custom hook
     sendRequest(
-      `https://react-hooks-794aa.firebaseio.com/ingredients/${ingredientId}.json`,
+      `https://react-hooks-794aa.firebaseio.com/ingredients/${ingredientId}.jso`,
       'DELETE',
       null,
       ingredientId,
@@ -193,12 +193,12 @@ const Ingredients = props => {
 
   }, [sendRequest]);
 
-  const clearError = useCallback(() => {
-    // setError(null);
-    // setIsLoading(false);
+  // const clearError = useCallback(() => {
+  //   // setError(null);
+  //   // setIsLoading(false);
 
-    // dispatchHttp({ type: 'CLEAR' });
-  }, []);
+  //   // dispatchHttp({ type: 'CLEAR' });
+  // }, []);
 
   const ingredientList = useMemo(() => {
     return (
@@ -220,7 +220,7 @@ const Ingredients = props => {
 
     // using custom hooks
     <div className="App">
-      {error && <ErrorModal onClose={clearError}>{error}</ErrorModal>}
+      {error && <ErrorModal onClose={clear}>{error}</ErrorModal>}
 
       <IngredientForm onAddIngredient={addIngredientHandler} loading={isLoading} />
 
